@@ -3,201 +3,200 @@
 //  BubblePop
 //
 //  Created by Croff Zhong on 2019/6/5.
-//  Copyright © 2019 BubblePop. All rights reserved.
+//  Copyright © 2019 Croff Zhong. Licensed under the MIT License.
 //
 
 import UIKit
 import GameKit
 
 class GameViewController: UIViewController {
-    
+
     @IBOutlet weak var timeLabel: UILabel!
     @IBOutlet weak var scoreLabel: UILabel!
     @IBOutlet weak var highScoreLabel: UILabel!
     @IBOutlet weak var bubblesView: UIView!
-    
-    let randomSource: GKRandomSource = GKARC4RandomSource()
-    let dataStorage = DataStorage()
-    
+
+    private let randomSource: GKRandomSource = GKARC4RandomSource()
+    private let dataStorage = DataStorage()
+    private let comboMultiplier = 1.5
+    private let removalChance: Float = 0.7
+    private let spawnChance: Float = 0.5
+
     var player: String?
     var settings: GameSettings?
-    var timer: Timer?
-    var timeLeft: Int = 60
-    var finish = false
-    var last: UIColor?
-    var score: Int = 0
-    var records: [ScoreRecord] = []
-    var highScore: Int = 0
-    
+    private var timer: Timer?
+    private var timeLeft: Int = 60
+    private var finished = false
+    private var lastColor: UIColor?
+    private var score: Int = 0
+    private var records: [ScoreRecord] = []
+    private var highScore: Int = 0
+
+    deinit {
+        timer?.invalidate()
+        NotificationCenter.default.removeObserver(self)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         do {
-            // Load settings and records
             settings = try dataStorage.loadGameSettings()
+        } catch {
+            settings = GameSettings()
+        }
+
+        do {
             records = try dataStorage.loadScoreRecord()
         } catch {
-            // Use default settings and empty records
-            settings = GameSettings(gameTime: 60, maxBubbles: 15)
             records = []
         }
-        
-        // Initialize highest score
-        if !records.isEmpty {
-            highScore = records[0].score
+        records.sort { $0.score > $1.score }
+
+        if let best = records.first {
+            highScore = best.score
             highScoreLabel.text = String(highScore)
         }
-        
-        // Initialize time label
-        timeLeft = settings?.gameTime ?? 60
+
+        timeLeft = settings?.gameTime ?? GameSettings().gameTime
         timeLabel.text = String(timeLeft)
+
+        NotificationCenter.default.addObserver(self, selector: #selector(pauseGame), name: UIApplication.willResignActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(resumeGame), name: UIApplication.didBecomeActiveNotification, object: nil)
     }
-    
+
     override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(true)
-        
-        // Initialize the timer and start it
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { (timer) in
-            self.updateTimeLabel()
-            self.updateBubbles()
-        })
-        timer?.fire()
+        super.viewDidAppear(animated)
+        startTimerIfNeeded()
     }
-    
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopTimer()
+    }
+
     override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(true)
-        
-        // Remove all bubbles
-        for bubbleView in self.bubblesView.subviews {
-            if let bubble = bubbleView as? BubbleView {
+        super.viewDidDisappear(animated)
+        for bubbleView in bubblesView.subviews {
+            (bubbleView as? BubbleView)?.disappear()
+        }
+    }
+
+    @objc private func pauseGame() {
+        stopTimer()
+    }
+
+    @objc private func resumeGame() {
+        guard view.window != nil else { return }
+        startTimerIfNeeded()
+    }
+
+    private func startTimerIfNeeded() {
+        guard timer == nil, !finished else { return }
+        let timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            self?.tick()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
+    }
+
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    private func tick() {
+        updateTimeLabel()
+        guard !finished else { return }
+        updateBubbles()
+    }
+
+    func updateTimeLabel() {
+        guard timeLeft > 0 else {
+            endGame()
+            return
+        }
+        timeLeft -= 1
+        timeLabel.text = "\(timeLeft)"
+        if timeLeft == 0 {
+            endGame()
+        }
+    }
+
+    private func endGame() {
+        stopTimer()
+        guard !finished else { return }
+        finished = true
+
+        let player = self.player ?? "Player"
+        records.append(ScoreRecord(player: player, score: score))
+        records.sort { $0.score > $1.score }
+        do {
+            try dataStorage.saveData(scores: records)
+        } catch {
+            print(error)
+        }
+
+        let alertController = UIAlertController(title: "Game Over", message: "\(player), your score is \(score)", preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "See Scores", style: .default) { [weak self] _ in
+            self?.performSegue(withIdentifier: "ScoreboardViewSegue", sender: nil)
+        })
+        present(alertController, animated: true)
+    }
+
+    func updateBubbles() {
+        for bubbleView in bubblesView.subviews {
+            if randomSource.nextUniform() >= removalChance, let bubble = bubbleView as? BubbleView {
                 bubble.disappear()
             }
         }
-    }
-    
-    func updateTimeLabel() {
-        if self.timeLeft > 0 {
-            // Game continues
-            self.timeLeft -= 1
-            self.timeLabel.text = "\(self.timeLeft)"
-        } else {
-            // Game over
-            timer?.invalidate()
-            if !finish {
-                // Show alert with information
-                let player = self.player ?? "Default"
-                let alertController = UIAlertController(title: "Game Over", message: "\(player), your score is \(score)", preferredStyle: .alert)
-                self.present(alertController, animated: true) {
-                    DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 2) {
-                        alertController.dismiss(animated: true) {
-                            self.performSegue(withIdentifier: "ScoreboardViewSegue", sender: nil)
-                        }
-                    }
-                }
-                
-                // Save the record
-                records.append(ScoreRecord(player: player, score: score))
-                records.sort(by: { $0.score > $1.score })
-                do {
-                    try dataStorage.saveData(scores: records)
-                } catch {
-                    print(error)
-                }
-                
-                finish = true
-            }
-        }
-    }
-    
-    func updateBubbles() {
-        // Remove some bubbles
-        for bubbleView in bubblesView.subviews {
-            if randomSource.nextUniform() >= 0.7 {
-                if let bubble = bubbleView as? BubbleView {
-                    bubble.disappear()
-                }
-            }
-        }
-        
-        // Add some bubbles
-        let spaceLeft = (settings?.maxBubbles ?? 15) - bubblesView.subviews.count
+
+        let spaceLeft = (settings?.maxBubbles ?? GameSettings().maxBubbles) - bubblesView.subviews.count
+        guard spaceLeft > 0 else { return }
         for _ in 0..<spaceLeft {
-            if randomSource.nextUniform() >= 0.5 {
-                if let bubble = addBubble() {
-                    self.bubblesView.addSubview(bubble)
-                    bubble.appear()
-                }
+            if randomSource.nextUniform() >= spawnChance, let bubble = addBubble() {
+                bubblesView.addSubview(bubble)
+                bubble.appear()
             }
         }
     }
-    
+
     func addBubble() -> BubbleView? {
-        // Percentage of bubble types
-        let model: BubbleModel
-        let random = randomSource.nextInt(upperBound: 100)
-        if random < 40 {
-            model = BubbleModel.red
-        } else if random < 70 {
-            model = BubbleModel.pink
-        } else if random < 85 {
-            model = BubbleModel.green
-        } else if random < 95 {
-            model = BubbleModel.blue
-        } else {
-            model = BubbleModel.black
-        }
-        
-        // Random position
-        let randomX = CGFloat(randomSource.nextUniform()) * (self.bubblesView.frame.width - CGFloat(BubbleView.SIZE))
-        let randomY = CGFloat(randomSource.nextUniform()) * (self.bubblesView.frame.height - CGFloat(BubbleView.SIZE))
-        let bubble = BubbleView(x: Int(randomX), y: Int(randomY), model: model)
+        let model = BubbleModel.random(roll: randomSource.nextInt(upperBound: 100))
+        let maxX = max(bubblesView.bounds.width - CGFloat(BubbleView.size), 0)
+        let maxY = max(bubblesView.bounds.height - CGFloat(BubbleView.size), 0)
+        let bubble = BubbleView(x: Int(CGFloat(randomSource.nextUniform()) * maxX),
+                                y: Int(CGFloat(randomSource.nextUniform()) * maxY),
+                                model: model)
         bubble.addTarget(self, action: #selector(popBubble), for: .touchUpInside)
-        
-        // Check bubble overlaps
-        if checkBubblePosition(bubble: bubble) {
-            return bubble
-        } else {
-            return nil
-        }
+        return checkBubblePosition(bubble: bubble) ? bubble : nil
     }
-    
+
     func checkBubblePosition(bubble: BubbleView) -> Bool {
-        for bubbleView in self.bubblesView.subviews {
-            if let exist = bubbleView as? BubbleView {
-                if exist.frame.intersects(bubble.frame) {
-                    return false
-                }
+        for bubbleView in bubblesView.subviews {
+            if let existing = bubbleView as? BubbleView, existing.frame.intersects(bubble.frame) {
+                return false
             }
         }
         return true
     }
-    
+
     @objc func popBubble(button: UIButton) {
-        if let bubbleView = button as? BubbleView {
-            bubbleView.pop()
-            let point = bubbleView.model.point
-            if bubbleView.model.color == last {
-                self.score += Int(Double(point) * 1.5)
-            } else {
-                self.score += point
-            }
-            self.scoreLabel.text = String(self.score)
-            if score > highScore {
-                highScore = score
-                self.highScoreLabel.text = String(self.highScore)
-            }
-            last = bubbleView.model.color
+        guard !finished, let bubbleView = button as? BubbleView,
+              bubbleView.isUserInteractionEnabled else { return }
+        bubbleView.pop()
+        let point = bubbleView.model.point
+        if bubbleView.model.color == lastColor {
+            score += Int(Double(point) * comboMultiplier)
+        } else {
+            score += point
         }
+        scoreLabel.text = String(score)
+        if score > highScore {
+            highScore = score
+            highScoreLabel.text = String(highScore)
+        }
+        lastColor = bubbleView.model.color
     }
-    
-    /*
-     // MARK: - Navigation
-     
-     // In a storyboard-based application, you will often want to do a little preparation before navigation
-     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-     // Get the new view controller using segue.destination.
-     // Pass the selected object to the new view controller.
-     }
-     */
-    
+
 }

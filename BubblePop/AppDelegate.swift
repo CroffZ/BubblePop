@@ -3,7 +3,7 @@
 //  BubblePop
 //
 //  Created by Croff Zhong on 2019/6/5.
-//  Copyright © 2019 BubblePop. All rights reserved.
+//  Copyright © 2019 Croff Zhong. Licensed under the MIT License.
 //
 
 import UIKit
@@ -43,4 +43,3 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
 }
-

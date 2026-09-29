@@ -3,49 +3,36 @@
 //  BubblePop
 //
 //  Created by Croff Zhong on 2019/6/5.
-//  Copyright © 2019 BubblePop. All rights reserved.
+//  Copyright © 2019 Croff Zhong. Licensed under the MIT License.
 //
 
 import UIKit
 
 class MainViewController: UIViewController {
-    
-    let time = 60
-    let maxBubble = 15
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        // Do any additional setup after loading the view.
-    }
-    
+
     @IBAction func startNewGame(_ sender: Any) {
-        // Use an alert to get player name from user
-        var inputText: UITextField = UITextField();
-        let alertController = UIAlertController.init(title: "Input your name:", message: nil, preferredStyle: .alert)
-        let ok = UIAlertAction.init(title: "OK", style: .default) { (action: UIAlertAction) -> () in
-            self.performSegue(withIdentifier: "GameViewSegue", sender: inputText.text)
+        let alertController = UIAlertController(title: "Input your name:", message: nil, preferredStyle: .alert)
+        alertController.addTextField { textField in
+            textField.placeholder = "Player"
+            textField.autocapitalizationType = .words
+            textField.returnKeyType = .done
         }
-        let cancel = UIAlertAction.init(title: "Cancel", style: .cancel, handler: nil)
+        let ok = UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+            let name = alertController.textFields?.first?.text
+            self?.performSegue(withIdentifier: "GameViewSegue", sender: name)
+        }
         alertController.addAction(ok)
-        alertController.addAction(cancel)
-        alertController.addTextField { (textField) in
-            inputText = textField
-        }
-        self.present(alertController, animated: true, completion: nil)
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alertController, animated: true)
     }
-    
-    // MARK: - Navigation
-    
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
+
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-        if segue.identifier == "GameViewSegue" {
-            if let destination = segue.destination as? GameViewController {
-                destination.player = sender as? String
-            }
+        guard segue.identifier == "GameViewSegue",
+              let destination = segue.destination as? GameViewController else {
+            return
         }
+        let trimmed = (sender as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        destination.player = trimmed.isEmpty ? "Player" : trimmed
     }
-    
+
 }

@@ -3,7 +3,7 @@
 //  BubblePop
 //
 //  Created by Croff Zhong on 2019/6/5.
-//  Copyright © 2019 BubblePop. All rights reserved.
+//  Copyright © 2019 BubblePop. Licensed under the MIT License.
 //
 
 import UIKit
@@ -37,16 +37,13 @@ class SettingsViewController: UIViewController {
         self.maxBubblesSliderValueChanged(self.maxBubblesSlider)
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        saveSettings()
+    }
+
     @IBAction func pressBack(_ sender: Any) {
-        // Save the game settings
-        let settings = GameSettings(gameTime: Int(gameTimeSlider.value), maxBubbles: Int(maxBubblesSlider.value))
-        do {
-            try dataStorage.saveData(settings: settings)
-        } catch {
-            print(error)
-        }
-        
-        self.dismiss(animated: true, completion: nil)
+        dismiss(animated: true)
     }
     
     @IBAction func gameTimeSliderValueChanged(_ sender: UISlider) {
@@ -57,14 +54,12 @@ class SettingsViewController: UIViewController {
         maxBubblesLabel.text = "\(Int(sender.value))"
     }
     
-    /*
-     // MARK: - Navigation
-     
-     // In a storyboard-based application, you will often want to do a little preparation before navigation
-     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-     // Get the new view controller using segue.destination.
-     // Pass the selected object to the new view controller.
-     }
-     */
-    
+    private func saveSettings() {
+        let settings = GameSettings(gameTime: Int(gameTimeSlider.value), maxBubbles: Int(maxBubblesSlider.value))
+        do {
+            try dataStorage.saveData(settings: settings)
+        } catch {
+            print(error)
+        }
+    }
 }
