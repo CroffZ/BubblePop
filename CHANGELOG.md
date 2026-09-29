@@ -16,6 +16,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - XCTest coverage for spawn weights, combo scoring, repeated taps, overlap detection, accessibility, and isolated JSON persistence.
 - A local test script with automatic iPhone simulator selection.
 - A security policy, test instructions, setup troubleshooting, and a maintainer release checklist.
+- Direct model tests for combo scoring, high-score tracking, settings validation, and saved settings format compatibility.
 
 ### Changed
 
@@ -26,6 +27,8 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Game over waits for the player to open the scoreboard instead of dismissing itself after two seconds.
 - JSON files are written atomically, and storage errors retain their underlying read/write/decoding details.
 - Source license notices consistently refer to MIT.
+- Scoring is handled by a dedicated `GameScore` model, and bubble definitions are immutable.
+- Settings defaults and slider ranges share one model, and JSON encoding/decoding uses common storage helpers.
 
 ### Fixed
 
@@ -35,9 +38,13 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - The scoreboard no longer crashes if a cell cannot be cast, and the unused restart button no longer sends an unrecognized action.
 - Repeated taps cannot score a bubble more than once; disappearing bubbles and taps after game over no longer score.
 - The documented minimum iOS version now matches the iOS 15.0 deployment target, and the obsolete armv7 capability requirement was removed.
+- Out-of-range saved settings are clamped to the existing slider limits.
+- The timer cannot restart after the game screen starts closing or while the app is inactive.
+- Failed score saves are reported at game over, and a failed clear leaves the displayed scoreboard intact.
 
 ### Removed
 
+- Empty app delegate and table-view cell template methods.
 - GitHub issue and pull request templates and CI workflows. Local tests remain available.
 
 ## [1.0.0] - 2019-06-05

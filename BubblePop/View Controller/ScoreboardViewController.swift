@@ -10,9 +10,9 @@ import UIKit
 
 class ScoreboardViewController: UITableViewController {
 
-    let dataStorage = DataStorage()
+    private let dataStorage = DataStorage()
 
-    var records: [ScoreRecord] = []
+    private var records: [ScoreRecord] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -59,13 +59,17 @@ class ScoreboardViewController: UITableViewController {
     }
 
     private func clearScores() {
-        records = []
         do {
-            try dataStorage.saveData(scores: records)
+            try dataStorage.saveData(scores: [])
+            records = []
+            tableView.reloadData()
         } catch {
-            print(error)
+            let alert = UIAlertController(title: "Unable to Clear Scores",
+                                          message: "Your saved scores have not been changed. Please try again.",
+                                          preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
         }
-        tableView.reloadData()
     }
 
 }

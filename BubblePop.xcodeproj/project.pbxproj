@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D00000000000000000000010 /* GameScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000011 /* GameScore.swift */; };
 		D00000000000000000000001 /* BubblePopTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000002 /* BubblePopTests.swift */; };
 		CA98931922A76741005C3252 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA98931822A76741005C3252 /* AppDelegate.swift */; };
 		CA98931E22A76741005C3252 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CA98931C22A76741005C3252 /* Main.storyboard */; };
@@ -35,6 +36,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D00000000000000000000011 /* GameScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScore.swift; sourceTree = "<group>"; };
 		D00000000000000000000002 /* BubblePopTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubblePopTests.swift; sourceTree = "<group>"; };
 		D00000000000000000000003 /* BubblePopTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BubblePopTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CA98931522A76741005C3252 /* BubblePop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BubblePop.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -136,6 +138,7 @@
 		CA98932C22A7684E005C3252 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				D00000000000000000000011 /* GameScore.swift */,
 				CA98932D22A7686A005C3252 /* BubbleModel.swift */,
 				CA98932F22A76878005C3252 /* DataStorage.swift */,
 				CA98933122A76885005C3252 /* GameSettings.swift */,
@@ -251,6 +254,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D00000000000000000000010 /* GameScore.swift in Sources */,
 				CA98931922A76741005C3252 /* AppDelegate.swift in Sources */,
 				CA98933622A768AF005C3252 /* BubbleView.swift in Sources */,
 				CA98933222A76885005C3252 /* GameSettings.swift in Sources */,

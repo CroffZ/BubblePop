@@ -34,6 +34,8 @@ About 30% of the bubbles on screen are removed each second, and each empty slot 
 | Game time | 60 seconds | 15–120 seconds |
 | Max bubbles | 15 | 5–20 |
 
+Settings loaded from JSON are clamped to these same ranges, so invalid values cannot create an unusable game.
+
 Settings and scores are JSON files in the app Documents directory (`GameSettings.json` and `ScoreBoard.json`). Nothing is uploaded. Delete the app to reset them, or use **Clear** on the scoreboard.
 
 ## Requirements
@@ -75,7 +77,7 @@ In Xcode, select the **BubblePop** scheme and an iOS Simulator, then press **⌘
 bash scripts/test.sh
 ```
 
-The script selects an available iPhone simulator and builds and runs the XCTest suite without signing. Tests cover spawn weights, combo scoring, repeated taps, overlap detection, accessibility labels, and JSON persistence. Storage tests use temporary directories, not the player's saved files.
+The script selects an available iPhone simulator and builds and runs the XCTest suite without signing. Tests cover spawn weights, combo scoring, high-score tracking, settings validation, repeated taps, overlap detection, accessibility labels, and JSON persistence. Storage tests use temporary directories, not the player's saved files.
 
 To choose a specific simulator, set `SIMULATOR_UDID` (find it with `xcrun simctl list devices available`). `DERIVED_DATA_PATH` and `RESULT_BUNDLE_PATH` can override the output locations. By default, test results are saved under `build/` as an `.xcresult` bundle that opens in Xcode.
 
@@ -101,7 +103,7 @@ The app uses a straightforward MVC split and storyboards. There are no third-par
 | `BubblePopTests` | XCTest model, storage, and gameplay regression tests |
 | `scripts/test.sh` | Local test entry point |
 
-`GameViewController` owns the one-second timer: it counts down, removes some bubbles, and spawns replacements inside the play area. `DataStorage` reads and writes the two JSON files.
+`GameViewController` owns the one-second timer: it counts down, removes some bubbles, and spawns replacements inside the play area. `GameScore` tracks points, same-color combos, and the high score. `GameSettings` defines defaults and valid ranges. `DataStorage` reads and writes the two JSON files.
 
 ## Contributing
 

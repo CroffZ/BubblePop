@@ -8,9 +8,25 @@
 
 import Foundation
 
-struct GameSettings: Codable {
+struct GameSettings: Codable, Equatable {
+    static let gameTimeRange = 15...120
+    static let maxBubblesRange = 5...20
 
-    var gameTime = 60
-    var maxBubbles = 15
+    let gameTime: Int
+    let maxBubbles: Int
 
+    init(gameTime: Int = 60, maxBubbles: Int = 15) {
+        self.gameTime = min(max(gameTime, Self.gameTimeRange.lowerBound), Self.gameTimeRange.upperBound)
+        self.maxBubbles = min(max(maxBubbles, Self.maxBubblesRange.lowerBound), Self.maxBubblesRange.upperBound)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case gameTime, maxBubbles
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(gameTime: try values.decode(Int.self, forKey: .gameTime),
+                  maxBubbles: try values.decode(Int.self, forKey: .maxBubbles))
+    }
 }

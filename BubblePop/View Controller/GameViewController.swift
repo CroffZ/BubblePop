@@ -18,19 +18,17 @@ class GameViewController: UIViewController {
 
     private let randomSource: GKRandomSource = GKARC4RandomSource()
     private let dataStorage = DataStorage()
-    private let comboMultiplier = 1.5
-    private let removalChance: Float = 0.7
-    private let spawnChance: Float = 0.5
+    private let removalThreshold: Float = 0.7
+    private let spawnThreshold: Float = 0.5
 
     var player: String?
-    var settings: GameSettings?
+    private var settings = GameSettings()
     private var timer: Timer?
-    private var timeLeft: Int = 60
+    private var timeLeft = GameSettings().gameTime
     private var finished = false
-    private var lastColor: UIColor?
-    private var score: Int = 0
+    private var isVisible = false
+    private var score = GameScore()
     private var records: [ScoreRecord] = []
-    private var highScore: Int = 0
 
     deinit {
         timer?.invalidate()
@@ -51,14 +49,10 @@ class GameViewController: UIViewController {
         } catch {
             records = []
         }
-        records.sort { $0.score > $1.score }
+        score = GameScore(highScore: records.map { $0.score }.max() ?? 0)
+        updateScoreLabels()
 
-        if let best = records.first {
-            highScore = best.score
-            highScoreLabel.text = String(highScore)
-        }
-
-        timeLeft = settings?.gameTime ?? GameSettings().gameTime
+        timeLeft = settings.gameTime
         timeLabel.text = String(timeLeft)
 
         NotificationCenter.default.addObserver(self, selector: #selector(pauseGame), name: UIApplication.willResignActiveNotification, object: nil)
@@ -67,11 +61,13 @@ class GameViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        isVisible = true
         startTimerIfNeeded()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        isVisible = false
         stopTimer()
     }
 
@@ -87,13 +83,13 @@ class GameViewController: UIViewController {
     }
 
     @objc private func resumeGame() {
-        guard view.window != nil else { return }
         startTimerIfNeeded()
     }
 
     private func startTimerIfNeeded() {
-        guard timer == nil, !finished else { return }
-        let timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+        guard timer == nil, !finished, isVisible,
+              UIApplication.shared.applicationState == .active else { return }
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             self?.tick()
         }
         RunLoop.main.add(timer, forMode: .common)
@@ -129,15 +125,15 @@ class GameViewController: UIViewController {
         finished = true
 
         let player = self.player ?? "Player"
-        records.append(ScoreRecord(player: player, score: score))
-        records.sort { $0.score > $1.score }
+        records.append(ScoreRecord(player: player, score: score.total))
+        var message = "\(player), your score is \(score.total)"
         do {
             try dataStorage.saveData(scores: records)
         } catch {
-            print(error)
+            message += "\nYour score could not be saved."
         }
 
-        let alertController = UIAlertController(title: "Game Over", message: "\(player), your score is \(score)", preferredStyle: .alert)
+        let alertController = UIAlertController(title: "Game Over", message: message, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "See Scores", style: .default) { [weak self] _ in
             self?.performSegue(withIdentifier: "ScoreboardViewSegue", sender: nil)
         })
@@ -146,15 +142,15 @@ class GameViewController: UIViewController {
 
     func updateBubbles() {
         for bubbleView in bubblesView.subviews {
-            if randomSource.nextUniform() >= removalChance, let bubble = bubbleView as? BubbleView {
+            if randomSource.nextUniform() >= removalThreshold, let bubble = bubbleView as? BubbleView {
                 bubble.disappear()
             }
         }
 
-        let spaceLeft = (settings?.maxBubbles ?? GameSettings().maxBubbles) - bubblesView.subviews.count
+        let spaceLeft = settings.maxBubbles - bubblesView.subviews.count
         guard spaceLeft > 0 else { return }
         for _ in 0..<spaceLeft {
-            if randomSource.nextUniform() >= spawnChance, let bubble = addBubble() {
+            if randomSource.nextUniform() >= spawnThreshold, let bubble = addBubble() {
                 bubblesView.addSubview(bubble)
                 bubble.appear()
             }
@@ -162,7 +158,7 @@ class GameViewController: UIViewController {
     }
 
     func addBubble() -> BubbleView? {
-        let model = BubbleModel.random(roll: randomSource.nextInt(upperBound: 100))
+        let model = BubbleModel.random(roll: randomSource.nextInt(upperBound: BubbleModel.totalWeight))
         let maxX = max(bubblesView.bounds.width - CGFloat(BubbleView.size), 0)
         let maxY = max(bubblesView.bounds.height - CGFloat(BubbleView.size), 0)
         let bubble = BubbleView(x: Int(CGFloat(randomSource.nextUniform()) * maxX),
@@ -185,18 +181,12 @@ class GameViewController: UIViewController {
         guard !finished, let bubbleView = button as? BubbleView,
               bubbleView.isUserInteractionEnabled else { return }
         bubbleView.pop()
-        let point = bubbleView.model.point
-        if bubbleView.model.color == lastColor {
-            score += Int(Double(point) * comboMultiplier)
-        } else {
-            score += point
-        }
-        scoreLabel.text = String(score)
-        if score > highScore {
-            highScore = score
-            highScoreLabel.text = String(highScore)
-        }
-        lastColor = bubbleView.model.color
+        score.record(bubbleView.model)
+        updateScoreLabels()
     }
 
+    private func updateScoreLabels() {
+        scoreLabel.text = String(score.total)
+        highScoreLabel.text = String(score.highScore)
+    }
 }

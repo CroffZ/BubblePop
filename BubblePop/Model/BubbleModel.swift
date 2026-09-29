@@ -6,10 +6,9 @@
 //  Copyright © 2019 Croff Zhong. Licensed under the MIT License.
 //
 
-import Foundation
 import UIKit
 
-class BubbleModel: NSObject {
+struct BubbleModel {
 
     static let red = BubbleModel(name: "Red", color: .red, point: 1, weight: 40)
     static let pink = BubbleModel(name: "Pink", color: UIColor(red: 249/255.0, green: 174/255.0, blue: 200/255.0, alpha: 1), point: 2, weight: 30)
@@ -17,10 +16,11 @@ class BubbleModel: NSObject {
     static let blue = BubbleModel(name: "Blue", color: .blue, point: 8, weight: 10)
     static let black = BubbleModel(name: "Black", color: .black, point: 10, weight: 5)
     static let all = [red, pink, green, blue, black]
+    static let totalWeight = all.reduce(0) { $0 + $1.weight }
 
     let name: String
-    var color: UIColor
-    var point: Int
+    let color: UIColor
+    let point: Int
     /// Relative spawn chance. The weights of `all` add up to 100.
     let weight: Int
 

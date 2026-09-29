@@ -2,6 +2,33 @@ import XCTest
 import UIKit
 @testable import BubblePop
 
+final class GameSettingsTests: XCTestCase {
+    func testSettingsClampToExistingSliderRanges() {
+        XCTAssertEqual(GameSettings(gameTime: -1, maxBubbles: 0),
+                       GameSettings(gameTime: 15, maxBubbles: 5))
+        XCTAssertEqual(GameSettings(gameTime: 999, maxBubbles: 999),
+                       GameSettings(gameTime: 120, maxBubbles: 20))
+    }
+
+    func testSettingsKeepValidValues() {
+        let settings = GameSettings(gameTime: 45, maxBubbles: 12)
+        XCTAssertEqual(settings.gameTime, 45)
+        XCTAssertEqual(settings.maxBubbles, 12)
+    }
+
+    func testDecodedSettingsAreValidated() throws {
+        let data = Data(#"{"gameTime":-10,"maxBubbles":200}"#.utf8)
+        let settings = try JSONDecoder().decode(GameSettings.self, from: data)
+        XCTAssertEqual(settings, GameSettings(gameTime: 15, maxBubbles: 20))
+    }
+
+    func testSettingsEncodingPreservesSavedFileFormat() throws {
+        let data = try JSONEncoder().encode(GameSettings())
+        let values = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Int])
+        XCTAssertEqual(values, ["gameTime": 60, "maxBubbles": 15])
+    }
+}
+
 final class DataStorageTests: XCTestCase {
     private var directory: URL!
     private var storage: DataStorage!
@@ -88,6 +115,36 @@ final class DataStorageTests: XCTestCase {
 
 @MainActor
 final class GameplayTests: XCTestCase {
+    func testScoreModelAppliesComboAndResetsForDifferentColor() {
+        var score = GameScore()
+        score.record(.green)
+        XCTAssertEqual(score.total, 5)
+        score.record(.green)
+        XCTAssertEqual(score.total, 12)
+        score.record(.blue)
+        XCTAssertEqual(score.total, 20)
+        score.record(.blue)
+        XCTAssertEqual(score.total, 32)
+        XCTAssertEqual(score.highScore, 32)
+    }
+
+    func testScoreModelKeepsSavedHighScoreUntilExceeded() {
+        var score = GameScore(highScore: 20)
+        XCTAssertEqual(score.total, 0)
+        score.record(.black)
+        XCTAssertEqual(score.highScore, 20)
+        score.record(.black)
+        XCTAssertEqual(score.total, 25)
+        XCTAssertEqual(score.highScore, 25)
+    }
+
+    func testScoreModelRoundsDownOnePointCombo() {
+        var score = GameScore()
+        score.record(.red)
+        score.record(.red)
+        XCTAssertEqual(score.total, 2)
+    }
+
     func testEverySpawnRollMatchesDocumentedWeights() {
         let counts = Dictionary(grouping: (0..<100).map { BubbleModel.random(roll: $0).name }, by: { $0 })
             .mapValues { $0.count }

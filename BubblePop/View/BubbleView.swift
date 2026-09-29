@@ -12,7 +12,7 @@ class BubbleView: UIButton {
 
     static let size = 80
 
-    var model: BubbleModel
+    let model: BubbleModel
 
     init(x: Int, y: Int, model: BubbleModel) {
         self.model = model

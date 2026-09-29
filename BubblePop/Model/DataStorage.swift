@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct DataStorage: Codable {
+struct DataStorage {
 
     let gameSettingsArchiveURL: URL
     let scoreBoardArchiveURL: URL
@@ -22,33 +22,30 @@ struct DataStorage: Codable {
         scoreBoardArchiveURL = documentsDirectory.appendingPathComponent("ScoreBoard").appendingPathExtension("json")
     }
 
-    func read(from archive: URL) throws -> Data {
-        return try Data(contentsOf: archive)
-    }
-
-    func write(_ data: Data, to archive: URL) throws {
-        // Replace the file only after the complete JSON has been written.
-        try data.write(to: archive, options: .atomic)
-    }
-
     func saveData(settings: GameSettings) throws {
-        let data = try JSONEncoder().encode(settings)
-        try write(data, to: gameSettingsArchiveURL)
+        try save(settings, to: gameSettingsArchiveURL)
     }
 
     func saveData(scores: [ScoreRecord]) throws {
-        let data = try JSONEncoder().encode(scores)
-        try write(data, to: scoreBoardArchiveURL)
+        try save(scores, to: scoreBoardArchiveURL)
     }
 
     func loadGameSettings() throws -> GameSettings {
-        let data = try read(from: gameSettingsArchiveURL)
-        return try JSONDecoder().decode(GameSettings.self, from: data)
+        return try load(from: gameSettingsArchiveURL)
     }
 
     func loadScoreRecord() throws -> [ScoreRecord] {
-        let data = try read(from: scoreBoardArchiveURL)
-        return try JSONDecoder().decode([ScoreRecord].self, from: data)
+        return try load(from: scoreBoardArchiveURL)
     }
 
+    private func load<Value: Decodable>(from archive: URL) throws -> Value {
+        let data = try Data(contentsOf: archive)
+        return try JSONDecoder().decode(Value.self, from: data)
+    }
+
+    private func save<Value: Encodable>(_ value: Value, to archive: URL) throws {
+        let data = try JSONEncoder().encode(value)
+        // Replace the file only after the complete JSON has been written.
+        try data.write(to: archive, options: .atomic)
+    }
 }
