@@ -1,6 +1,5 @@
 # BubblePop
 
-[![iOS Build](https://github.com/CroffZ/BubblePop/actions/workflows/ios.yml/badge.svg)](https://github.com/CroffZ/BubblePop/actions/workflows/ios.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 BubblePop is a small iOS game written in Swift. Tap colored bubbles before they disappear, chain the same color for a bonus, and beat the local high score before the timer runs out.
@@ -80,7 +79,7 @@ The script selects an available iPhone simulator and builds and runs the XCTest 
 
 To choose a specific simulator, set `SIMULATOR_UDID` (find it with `xcrun simctl list devices available`). `DERIVED_DATA_PATH` and `RESULT_BUNDLE_PATH` can override the output locations. By default, test results are saved under `build/` as an `.xcresult` bundle that opens in Xcode.
 
-[GitHub Actions](https://github.com/CroffZ/BubblePop/actions) runs the same script for pull requests and pushes to `main` or `master`, and uploads test results and the build log. These are unit/regression tests, not full UI automation; play a round and check settings and the scoreboard before submitting UI changes.
+These are local unit/regression tests, not full UI automation; play a round and check settings and the scoreboard before submitting UI changes.
 
 ### Troubleshooting
 
@@ -100,8 +99,7 @@ The app uses a straightforward MVC split and storyboards. There are no third-par
 | `BubblePop/View Controller` | Menu, game loop, settings, and scoreboard |
 | `BubblePop/Base.lproj` | Main interface and launch screen |
 | `BubblePopTests` | XCTest model, storage, and gameplay regression tests |
-| `scripts/test.sh` | Shared local and CI test entry point |
-| `.github` | CI workflow and issue/pull request templates |
+| `scripts/test.sh` | Local test entry point |
 
 `GameViewController` owns the one-second timer: it counts down, removes some bubbles, and spawns replacements inside the play area. `DataStorage` reads and writes the two JSON files.
 

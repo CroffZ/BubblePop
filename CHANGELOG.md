@@ -9,12 +9,12 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Added
 
-- MIT license, contribution guide, code of conduct, and GitHub issue and pull request templates.
-- Shared Xcode scheme and a simulator build workflow.
+- MIT license, contribution guide, and code of conduct.
+- Shared Xcode scheme.
 - Accessibility names for bubbles.
 - A confirmation before clearing the local scoreboard.
 - XCTest coverage for spawn weights, combo scoring, repeated taps, overlap detection, accessibility, and isolated JSON persistence.
-- A shared local/CI test script with automatic iPhone simulator selection.
+- A local test script with automatic iPhone simulator selection.
 - A security policy, test instructions, setup troubleshooting, and a maintainer release checklist.
 
 ### Changed
@@ -24,7 +24,6 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Settings are saved when the settings screen disappears, not only when Back is tapped.
 - An empty player name is stored as "Player".
 - Game over waits for the player to open the scoreboard instead of dismissing itself after two seconds.
-- CI now runs tests with read-only permissions and pinned actions, and uploads test results and build logs.
 - JSON files are written atomically, and storage errors retain their underlying read/write/decoding details.
 - Source license notices consistently refer to MIT.
 
@@ -36,6 +35,10 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - The scoreboard no longer crashes if a cell cannot be cast, and the unused restart button no longer sends an unrecognized action.
 - Repeated taps cannot score a bubble more than once; disappearing bubbles and taps after game over no longer score.
 - The documented minimum iOS version now matches the iOS 15.0 deployment target, and the obsolete armv7 capability requirement was removed.
+
+### Removed
+
+- GitHub issue and pull request templates and CI workflows. Local tests remain available.
 
 ## [1.0.0] - 2019-06-05
 

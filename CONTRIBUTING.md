@@ -29,7 +29,7 @@ Run `bash scripts/test.sh` from the repository root, or press **⌘U** with the 
 - For lifecycle changes, background/foreground the app and leave the game while the timer is running.
 - For UI changes, check iPhone and iPad layouts, rotation, and VoiceOver labels.
 
-CI runs the same suite and uploads `.xcresult` bundles and build logs. A passing suite does not replace these manual UI checks.
+The local test script saves an `.xcresult` bundle that opens in Xcode. A passing suite does not replace these manual UI checks.
 
 ## Making a change
 
@@ -43,7 +43,7 @@ CI runs the same suite and uploads `.xcresult` bundles and build logs. A passing
 
 ## Pull requests
 
-- Use a descriptive title and fill in the pull request template.
+- Use a descriptive title and explain what changed and why.
 - Run the test suite and fix failures before requesting review.
 - Describe how you tested the change (simulator device and iOS version).
 - Keep the diff limited to the issue you are solving.
@@ -64,9 +64,9 @@ Report vulnerabilities using the [security policy](SECURITY.md), not a public bu
 
 ## Maintainer release checklist
 
-1. Confirm CI is green and complete the manual checks above.
+1. Run the local test suite and complete the manual checks above.
 2. Move the relevant Unreleased entries into a dated version section in `CHANGELOG.md`.
 3. Update the app version and build number in `BubblePop/Info.plist` when shipping an app build.
 4. Tag the reviewed commit and publish GitHub release notes describing changes and any saved-data compatibility impact.
 
-Configure the default branch to require the **iOS Build / build** check and pull-request review before merging. Enable GitHub private vulnerability reporting so the security policy has a private reporting channel.
+Consider requiring pull-request review on the default branch before merging. Enable GitHub private vulnerability reporting so the security policy has a private reporting channel.
